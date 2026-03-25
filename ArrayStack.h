@@ -19,13 +19,22 @@ public:
     }
 
     T top() const {
-        // TODO
-        return T();
+        if (!data.empty()) {
+            return data.back();
+        } else {
+            throw std::out_of_range("ArrayStack is empty");
+        }
     }
 
     bool empty() const {
-        // TODO
-        return true;
+        if (!data.empty()) {
+            for (T nodes : data) {
+                pop();
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     int size() const {
