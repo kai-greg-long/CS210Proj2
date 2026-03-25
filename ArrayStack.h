@@ -33,13 +33,23 @@ public:
             }
             return true;
         } else {
+            throw std::out_of_range("ArrayStack is empty");
             return false;
         }
     }
 
     int size() const {
-        // TODO
-        return 0;
+        int size = 0;
+
+        if (!data.empty()) {
+            for (T nodes : data) {
+                size++;
+            }
+            return size;
+        } else {
+            throw std::out_of_range("ArrayStack is empty");
+            return 0;
+        }
     }
 };
 
