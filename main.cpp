@@ -70,6 +70,31 @@ int precedence(const string& op) {
 bool isValidPostfix(const vector<Token>& tokens) {
 
     bool expectOperand = true;
+    int opcount = 0;
+    int numcount = 0;
+
+    if (!tokens.empty()) {
+        for (const auto& t : tokens) {
+            if (isOperator(t.value)) {
+                expectOperand = false;
+                opcount++;
+            }
+            if (isNumber(t.value)) {
+                expectOperand = true;
+                numcount++;
+            }
+        }
+        if (expectOperand == false && opcount == numcount - 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+bool isValidInfix(const vector<Token>& tokens) {
+
+    bool expectOperand = true;
     int parenBalance = 0;
 
     if (!tokens.empty()) {
@@ -97,11 +122,7 @@ bool isValidPostfix(const vector<Token>& tokens) {
             }
         }
     }
-}
 
-bool isValidInfix(const vector<Token>& tokens) {
-    // TODO
-    return false;
 }
 
 // Conversion
