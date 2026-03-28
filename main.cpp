@@ -48,16 +48,55 @@ bool isOperator(const string& s) {
     return s == "+" || s == "-" || s == "*" || s == "/";
 }
 
+bool isNumber (const string& s) {
+    return isdigit(s[0]);
+}
+
 int precedence(const string& op) {
-    // TODO
+
+    if (isOperator(op)) {
+        if (op == "+" || op == "-") {
+            return 1;
+        }
+        else if (op == "*" || op == "/") {
+            return 2;
+        }
+    }
     return 0;
 }
 
 // Detection
 
 bool isValidPostfix(const vector<Token>& tokens) {
-    // TODO
-    return false;
+
+    bool expectOperand = true;
+    int parenBalance = 0;
+
+    if (!tokens.empty()) {
+
+        for (const auto& t : tokens) {
+            if (t.value == "(") {
+                parenBalance++;
+            }
+            if (t.value == ")") {
+                parenBalance--;
+            }
+            if ( isNumber(t.value)) {
+                expectOperand = false;
+            }
+            if (isOperator(t.value)) {
+                expectOperand = true;
+            }
+
+            if (parenBalance == 0 && expectOperand == false) {
+                return true;
+            }
+
+            if (parenBalance == 1 || expectOperand == true) {
+                return false;
+            }
+        }
+    }
 }
 
 bool isValidInfix(const vector<Token>& tokens) {
