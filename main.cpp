@@ -19,7 +19,7 @@ struct Token {
 vector<Token> tokenize(const string& line) {
     vector<Token> tokens;
 
-    for (int i = 0; i < line.length(); i++) {
+    for (int i = 0; i < (int)line.length(); i++) {
         char c = line[i];
 
         if (isspace(c)) {
@@ -27,7 +27,7 @@ vector<Token> tokenize(const string& line) {
         }
         if (isdigit(c)) {
             string num;
-            while (i < line.length () && isdigit(line[i])) {
+            while (i < (int)line.length() && isdigit(line[i])) {
                 num += line[i];
                 i++;
             }
@@ -48,19 +48,20 @@ bool isOperator(const string& s) {
     return s == "+" || s == "-" || s == "*" || s == "/";
 }
 
-bool isNumber (const string& s) {
-    return isdigit(s[0]);
+bool isNumber(const string& s) {
+    if (s.empty()) return false;
+    for (char c : s) {
+        if (!isdigit(c)) return false;
+    }
+    return true;
 }
 
 int precedence(const string& op) {
-
-    if (isOperator(op)) {
-        if (op == "+" || op == "-") {
-            return 1;
-        }
-        else if (op == "*" || op == "/") {
-            return 2;
-        }
+    if (op == "+" || op == "-") {
+        return 1;
+    }
+    else if (op == "*" || op == "/") {
+        return 2;
     }
     return 0;
 }
@@ -68,61 +69,67 @@ int precedence(const string& op) {
 // Detection
 
 bool isValidPostfix(const vector<Token>& tokens) {
+    if (tokens.empty()) {
+        return false;
+    }
 
-    bool expectOperand = true;
-    int opcount = 0;
-    int numcount = 0;
+    int count = 0;
 
-    if (!tokens.empty()) {
-        for (const auto& t : tokens) {
-            if (isOperator(t.value)) {
-                expectOperand = false;
-                opcount++;
-            }
-            if (isNumber(t.value)) {
-                expectOperand = true;
-                numcount++;
-            }
+    for (const auto& t : tokens) {
+        if (isNumber(t.value)) {
+            count++;
         }
-        if (expectOperand == false && opcount == numcount - 1) {
-            return true;
-        } else {
+        else if (isOperator(t.value)) {
+            if (count < 2) {
+                return false;
+            }
+            count--;
+        }
+        else {
             return false;
         }
     }
+
+    return count == 1;
 }
 
 bool isValidInfix(const vector<Token>& tokens) {
+    if (tokens.empty()) {
+        return false;
+    }
 
     bool expectOperand = true;
     int parenBalance = 0;
 
-    if (!tokens.empty()) {
-
-        for (const auto& t : tokens) {
-            if (t.value == "(") {
-                parenBalance++;
-            }
-            if (t.value == ")") {
-                parenBalance--;
-            }
-            if ( isNumber(t.value)) {
+    for (const auto& t : tokens) {
+        if (expectOperand) {
+            if (isNumber(t.value)) {
                 expectOperand = false;
             }
+            else if (t.value == "(") {
+                parenBalance++;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
             if (isOperator(t.value)) {
                 expectOperand = true;
             }
-
-            if (parenBalance == 0 && expectOperand == false) {
-                return true;
+            else if (t.value == ")") {
+                if (parenBalance == 0) {
+                    return false;
+                }
+                parenBalance--;
             }
-
-            if (parenBalance == 1 || expectOperand == true) {
+            else {
                 return false;
             }
         }
     }
 
+    return parenBalance == 0 && expectOperand == false;
 }
 
 // Conversion
@@ -131,23 +138,36 @@ vector<Token> infixToPostfix(const vector<Token>& tokens) {
     vector<Token> output;
     ArrayStack<Token> opstack;
 
-    while (!tokens.empty()) {
-        for (const auto& t : tokens) {
-            if (isNumber(t.value) ) {
-                output.push_back(t);
+    for (const auto& t : tokens) {
+        if (isNumber(t.value)) {
+            output.push_back(t);
+        }
+        else if (t.value == "(") {
+            opstack.push(t);
+        }
+        else if (t.value == ")") {
+            while (!opstack.empty() && opstack.top().value != "(") {
+                output.push_back(opstack.top());
+                opstack.pop();
             }
-            if (isOperator(t.value)) {
-                while (isOperator(opstack.top().value) && precedence(opstack.top().value) >= precedence(t.value)) {
-                    output.push_back(opstack.top());
-                    opstack.pop();
-       }
-            }
-            if (t.value == "(") {
-                while (t.value != ")") {
-                    opstack.push(t);
-                }
+            if (!opstack.empty()) {
+                opstack.pop();
             }
         }
+        else if (isOperator(t.value)) {
+            while (!opstack.empty() &&
+                   isOperator(opstack.top().value) &&
+                   precedence(opstack.top().value) >= precedence(t.value)) {
+                output.push_back(opstack.top());
+                opstack.pop();
+            }
+            opstack.push(t);
+        }
+    }
+
+    while (!opstack.empty()) {
+        output.push_back(opstack.top());
+        opstack.pop();
     }
 
     return output;
@@ -157,8 +177,29 @@ vector<Token> infixToPostfix(const vector<Token>& tokens) {
 
 double evalPostfix(const vector<Token>& tokens) {
     ArrayStack<double> stack;
-    // TODO
-    return 0.0;
+
+    for (const auto& t : tokens) {
+        if (isNumber(t.value)) {
+            stack.push(stod(t.value));
+        }
+        else if (isOperator(t.value)) {
+            double b = stack.top();
+            stack.pop();
+            double a = stack.top();
+            stack.pop();
+
+            double result = 0.0;
+
+            if (t.value == "+") result = a + b;
+            else if (t.value == "-") result = a - b;
+            else if (t.value == "*") result = a * b;
+            else if (t.value == "/") result = a / b;
+
+            stack.push(result);
+        }
+    }
+
+    return stack.top();
 }
 
 // Main
@@ -177,8 +218,11 @@ int main() {
         vector<Token> postfix = infixToPostfix(tokens);
         cout << "FORMAT: INFIX\n";
         cout << "POSTFIX: ";
-        for (const auto& t : postfix) {
-            cout << t.value << " ";
+        for (int i = 0; i < (int)postfix.size(); i++) {
+            cout << postfix[i].value;
+            if (i < (int)postfix.size() - 1) {
+                cout << " ";
+            }
         }
         cout << "\n";
         cout << "RESULT: " << evalPostfix(postfix) << "\n";

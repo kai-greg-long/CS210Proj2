@@ -28,13 +28,9 @@ public:
 
     bool empty() const {
         if (!data.empty()) {
-            for (T nodes : data) {
-                pop();
-            }
-            return true;
-        } else {
-            throw std::out_of_range("ArrayStack is empty");
             return false;
+        } else {
+            return true;
         }
     }
 
