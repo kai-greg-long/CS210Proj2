@@ -137,7 +137,10 @@ vector<Token> infixToPostfix(const vector<Token>& tokens) {
                 output.push_back(t);
             }
             if (isOperator(t.value)) {
-                opstack.push(t);
+                while (isOperator(opstack.top().value) && precedence(opstack.top().value) >= precedence(t.value)) {
+                    output.push_back(opstack.top());
+                    opstack.pop();
+       }
             }
             if (t.value == "(") {
                 while (t.value != ")") {
