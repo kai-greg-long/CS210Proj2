@@ -129,7 +129,24 @@ bool isValidInfix(const vector<Token>& tokens) {
 
 vector<Token> infixToPostfix(const vector<Token>& tokens) {
     vector<Token> output;
-    // TODO
+    ArrayStack<Token> opstack;
+
+    while (!tokens.empty()) {
+        for (const auto& t : tokens) {
+            if (isNumber(t.value) ) {
+                output.push_back(t);
+            }
+            if (isOperator(t.value)) {
+                opstack.push(t);
+            }
+            if (t.value == "(") {
+                while (t.value != ")") {
+                    opstack.push(t);
+                }
+            }
+        }
+    }
+
     return output;
 }
 
